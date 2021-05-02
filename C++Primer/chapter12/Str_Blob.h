@@ -97,8 +97,7 @@ private:
 };
 
 inline shared_ptr<vector<string>> 
-StrBlobPtr::check(size_t i, const string &msg) const
-{
+StrBlobPtr::check(size_t i, const string &msg) const {
 	auto ret = wptr.lock();	//判断vector是否存在
 	if (!ret)
 		throw runtime_error("unbound StrBlobPtr");
