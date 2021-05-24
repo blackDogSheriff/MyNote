@@ -9,11 +9,16 @@ public:
 	//派生类重新定义虚构函数override
 	virtual double net_price(size_t n) const
 			{ return n * price; }
-	virtual ~Quote() = default;
+	//如果删除的是一个指向派生类对象的基类指针，则需要虚析构函数
+	virtual ~Quote() = default;	//动态绑定虚函数
 	virtual void debug()
 	{
 		cout << "bookNo = " << bookNo << " price = " << price << endl;
 	}
+
+	virtual Quote *clone() const & { return new Quote(*this); }
+	virtual Quote *clone() && 
+				{ return new Quote(move(*this)); }
 private:
 	string bookNo;
 protected:
@@ -29,6 +34,8 @@ public:
 	//抽象基类负责定义接口，后续其他的类可以覆盖该接口
 	//抽象基类不可以直接创建对象
 	double net_price(size_t) const = 0;	//覆盖基类的纯虚函数
+	std::pair<size_t, double> discount_policy() const 
+			{ return {quantity, discount}; }
 protected:
 	size_t quantity = 0;
 	double discount = 0.0;
@@ -56,14 +63,40 @@ private:
 
 class Limited_quote : public Disc_quote {
 public:
-	Limited_quote(const string &book = " ", double p = 0.0, size_t qty = 0, double disc = 0.0) :
-			Disc_quote(book, p, qty, disc), min_qty(qty), discount(disc) { }
+	Limited_quote(const string &book = " ", double p = 0.0, 
+			size_t qty = 0, double disc = 0.0) :
+		Disc_quote(book, p, qty, disc), min_qty(qty), discount(disc) { }
 	double net_price(size_t) const override;
 private:
 	size_t min_qty;
 	double discount;
 
 };
+
+class Basket {
+public:
+	void add_item(const shared_ptr<Quote> &sale)
+			{ item.insert(sale); }
+	double total_receipt(ostream &) const;
+private:
+	static bool compare(const shared_ptr<Quote> &lhs,
+			const shared_ptr<Quote> &rhs)
+	{ return lhs-> isbn() < rhs->isbn(); }
+	multiset<shared_ptr<Quote>, decltype(compare) *>
+			items{compare};
+
+};
+
+double Basket::total_receipt(ostream &s) const
+{
+	double sum = 0.0;
+	for (auto iter = item.cbegin();	iter != item.cend(); 
+			item = item.upper_bound(*iter)) {
+		sum += print_total(os, **iter, item.count(*iter));
+	}
+	os << "Total Sale:" << sum << endl;
+	return sum;
+}
 
 double Limited_quote::net_price(size_t cnt) const 
 {
@@ -114,6 +147,28 @@ int main(void)
 	Bulk_Quote *bulkP = itemP;	//错误：不能将基类转换成派生类
 #endif
 
+#if 0
+	//不可以使用Quote保存 Bulk_Quote
+	vector<Quote> basket;
+	basket.push_back(Quote("0-201-82470-1", 50));	//只能拷贝基类部分
+	basket.push_back(Bulk_Quote("0-201-82470-1", 50, 10, .25));	//只能拷贝基类部分
+	cout << basket.back().net_price(15);
+#endif
+
+	//使用只能指针保存基类
+	vector<shared_ptr<Quote>> basket;	//创建智能指针的vector
+	//使用基类的引用或指针调用一个虚函数的时候会发生动态绑定
+	basket.push_back(make_shared<Quote>("0-201-82470-1", 50);
+	basket.push_back(make_shared<Bulk_quote>("0-201-54848-8", 50, 10, .25));
+	cout << basket.back()->net_price(15) << endl;
+
+	Basket bsk;
+	bsk.add_item(make_shared<Quote>("123", 45));
+	bsk.add_item(make_shared<Bulk_quote>("345", 45, 3, .15));
 
 	return 0;
 }
+/*
+笔记
+	1. 在类中被声明为virtual 的成员，基类希望这种成员在派生类中重定义。除了构造函数外，任意非 static成员都可以为虚成员
+*/
