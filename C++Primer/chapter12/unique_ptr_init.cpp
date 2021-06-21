@@ -14,6 +14,7 @@ int main(void)
 	//release()
 	unique_ptr<string> p2(p1.release());	//release将p1置空,返回指针(转移所有权到p2)
 	unique_ptr<string> p3(new string("Trex"));	
+
 	p2.reset(p3.release());	//释放p2，获得p3的所有权
 
 	p2.release();	//p2不会释放内存，而且丢失了指针

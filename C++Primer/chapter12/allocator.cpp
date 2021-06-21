@@ -31,6 +31,10 @@ int main(void)
 	while (q != p)
 		alloc.destory(--q);	//释放构造的每一个string，只能对真正构造了的元素进行destory操作	
 	alloc.deallocate(p, n);
+
+	auto p = alloc.allocate(vi.size() * 2);
+	auto q = uninitalized_copy(vi.begin(), vi.end(), p);
+	uninitalized_fill_n(q, vi.size(), 42);
 	
 
 

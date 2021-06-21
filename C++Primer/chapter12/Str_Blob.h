@@ -106,18 +106,22 @@ StrBlobPtr::check(size_t i, const string &msg) const {
 	return ret;
 }
 
+//返回当前元素
 inline string& StrBlobPtr::deref() const 
 {
 	auto p = check(curr, "dereference past end");
 	return (*p)[curr];
 }
 
+//将curr+1
 inline StrBlobPtr& StrBlobPtr::incr()
 {
 	check(curr, "increment past end of StrBlobPtr");
 	++curr;
 	return *this;
 }
+
+//将curr-1
 inline StrBlobPtr& StrBlobPtr::decr()
 {
 	--curr;

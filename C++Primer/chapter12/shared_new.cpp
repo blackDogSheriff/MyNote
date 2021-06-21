@@ -21,6 +21,7 @@ int main(void)
 
 	//智能指针和内置指针混合使用会导致内存被释放
 	int *x(new int(1024));
+	process(x);						//错误：构造函数是explicit的，必须使用直接初始化；
 	process(shared_ptr<int>(x));	//函数调用完毕之后内存会被释放
 	int j = x;
 
